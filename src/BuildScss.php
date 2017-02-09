@@ -22,7 +22,14 @@ class BuildScss {
     return $this->buildDir;
   }
 
-  public function findFiles() {
+  /**
+   * Prepare file-map between the source and target folders.
+   *
+   * @return array
+   *   A list of files to synchronize.
+   *   Ex: ["/var/www/source.scss" => "/var/www/target.scss"].
+   */
+  public function buildFileMap() {
     $allFiles = array();
     foreach ($this->extDirs as $ext) {
       $extPath = CRM_Utils_File::addTrailingSlash($ext['path']);
@@ -45,19 +52,33 @@ class BuildScss {
     CRM_Utils_File::cleanDir($this->getBuildDir(), TRUE, FALSE);
   }
 
+  /**
+   * Update files
+   */
   public function update() {
-    // TODO: only delete stale files; use timestamp to reduce i/o
-    $this->clean();
+    $fileMap = $this->buildFileMap();
 
-    foreach ($this->findFiles() as $from => $to) {
-      $parent = dirname($to);
-      if (!is_dir($parent)) {
-        mkdir($parent, 0777, TRUE);
+    foreach (CRM_Utils_File::findFiles($this->getBuildDir(), '*.scss') as $tgtFile) {
+      if (!in_array($tgtFile, $fileMap)) {
+        $this->debug("Remove orphan: $tgtFile");
+        unlink($tgtFile);
       }
-      copy($from, $to);
+    }
+
+    foreach ($fileMap as $from => $to) {
+      if (!file_exists($to) || filemtime($from) > filemtime($to)) {
+        $this->debug("Copy $from to $to");
+        $parent = dirname($to);
+        if (!is_dir($parent)) {
+          mkdir($parent, 0777, TRUE);
+        }
+        copy($from, $to);
+      }
     }
 
     foreach (_find_dirs($this->getBuildDir()) as $dir) {
+      $allFile = "$dir/_ALL.scss";
+      $this->debug("Generate $allFile");
       $files = CRM_Utils_File::findFiles($dir, '*.scss');
       $files = preg_grep(';_ALL.scss$;', $files, PREG_GREP_INVERT);
       sort($files);
@@ -66,9 +87,12 @@ class BuildScss {
         $file = CRM_Utils_File::relativize($file, CRM_Utils_File::addTrailingSlash(dirname($this->getBuildDir())));
         $buf .= sprintf("@import \"%s\";\n", $file);
       }
-      file_put_contents("$dir/_ALL.scss", $buf);
+      file_put_contents($allFile, $buf);
     }
+  }
 
+  protected function debug($message) {
+     // echo "[$message]\n";
   }
 
 }
@@ -78,7 +102,7 @@ function _find_dirs($dir) {
   $result = array();
   while (!empty($todos)) {
     $subdir = array_shift($todos);
-    foreach ((array)glob("$subdir/*") as $match) {
+    foreach ((array) glob("$subdir/*") as $match) {
       if (is_dir($match)) {
         $result[] = $match;
       }
