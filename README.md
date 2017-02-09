@@ -8,6 +8,16 @@ deployments).
  * To reference another extension, use "SCSSROOT", as in `@import "SCSSROOT/org.example.other/foo.scss";`
  * To reference all files in an extensions' folder, use "ALL", as in `@import "SCSSROOT/org.example.other/scss/ALL";`
 
+# Requirements
+
+To locate configuration information about your CiviCRM instance, these
+common pre-requisites should be met:
+
+ * The source tree must physically live under the web-root of your CiviCRM build.
+ * The [`cv`](https://github.com/civicrm/cv) command must be available in the `PATH`.
+
+The above conditions should already be met automatically if using [`civibuild`](https://github.com/civicrm/civicrm-buildkit/blob/master/doc/civibuild.md).
+
 # Installation
 
 ```bash
