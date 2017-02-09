@@ -7,6 +7,7 @@ class BuildScss {
   private $extDirs;
 
   public function __construct() {
+    // Note: Keep in sync with "index.js" (getPath()).
     $this->buildPath = CRM_Utils_File::addTrailingSlash(CRM_Core_Config::singleton()->templateCompileDir) . 'SCSSROOT';
     $this->extDirs = array();
     $container = CRM_Extension_System::singleton()->getFullContainer();

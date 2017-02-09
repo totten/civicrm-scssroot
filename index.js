@@ -13,7 +13,6 @@ module.exports = function(options) {
   }
 
   return {
-
     clean: function() { return cvPromise('scr ' + cleanScript).then(assimilate); },
     cleanSync: function() { assimilate(cvSync('scr ' + cleanScript)); },
     update: function() { return cvPromise('scr ' + updateScript).then(assimilate); },
@@ -21,12 +20,16 @@ module.exports = function(options) {
 
     getPath: function() {
       if (buildPath === null) {
+        // Note: Keep in sync with BuildScss::__construct().
         buildPath = cvSync("ev 'return CRM_Core_Config::singleton()->templateCompileDir;'");
       }
       return buildPath;
     },
 
     /**
+     * Get a list of files/folders/globs to watch. Whenever these change,
+     * we should update the SCSSROOT data.
+     *
      * @param filter
      *   Null, or an array of extension keys, or a function
      *   Ex: ['org.civicrm.bootstrap', 'org.civicrm.bootstrapcivicrm']
@@ -56,4 +59,5 @@ module.exports = function(options) {
       return paths;
     }
   };
+
 };
