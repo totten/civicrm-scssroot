@@ -2,12 +2,12 @@
 
 class BuildScss {
 
-  private $buildDir;
+  private $buildPath;
 
   private $extDirs;
 
   public function __construct() {
-    $this->buildDir = CRM_Utils_File::addTrailingSlash(CRM_Core_Config::singleton()->templateCompileDir) . 'SCSSROOT';
+    $this->buildPath = CRM_Utils_File::addTrailingSlash(CRM_Core_Config::singleton()->templateCompileDir) . 'SCSSROOT';
     $this->extDirs = array();
     $container = CRM_Extension_System::singleton()->getFullContainer();
     foreach ($container->getKeys() as $key) {
@@ -18,8 +18,8 @@ class BuildScss {
     }
   }
 
-  public function getBuildDir() {
-    return $this->buildDir;
+  public function getBuildPath() {
+    return $this->buildPath;
   }
 
   /**
@@ -39,7 +39,7 @@ class BuildScss {
         }
 
         $relPath = CRM_Utils_File::relativize($file, $extPath);
-        $allFiles[$file] = $this->buildDir . DIRECTORY_SEPARATOR . $ext['key'] . DIRECTORY_SEPARATOR . $relPath;
+        $allFiles[$file] = $this->buildPath . DIRECTORY_SEPARATOR . $ext['key'] . DIRECTORY_SEPARATOR . $relPath;
       }
     }
     return $allFiles;
@@ -49,7 +49,7 @@ class BuildScss {
    * Clean out the build dir
    */
   public function clean() {
-    CRM_Utils_File::cleanDir($this->getBuildDir(), TRUE, FALSE);
+    CRM_Utils_File::cleanDir($this->getBuildPath(), TRUE, FALSE);
   }
 
   /**
@@ -58,7 +58,7 @@ class BuildScss {
   public function update() {
     $fileMap = $this->buildFileMap();
 
-    foreach (CRM_Utils_File::findFiles($this->getBuildDir(), '*.scss') as $tgtFile) {
+    foreach (CRM_Utils_File::findFiles($this->getBuildPath(), '*.scss') as $tgtFile) {
       if (!in_array($tgtFile, $fileMap)) {
         $this->debug("Remove orphan: $tgtFile");
         unlink($tgtFile);
@@ -76,7 +76,7 @@ class BuildScss {
       }
     }
 
-    foreach (_find_dirs($this->getBuildDir()) as $dir) {
+    foreach (_find_dirs($this->getBuildPath()) as $dir) {
       $allFile = "$dir/_ALL.scss";
       $this->debug("Generate $allFile");
       $files = CRM_Utils_File::findFiles($dir, '*.scss');
@@ -84,7 +84,7 @@ class BuildScss {
       sort($files);
       $buf = '';
       foreach ($files as $file) {
-        $file = CRM_Utils_File::relativize($file, CRM_Utils_File::addTrailingSlash(dirname($this->getBuildDir())));
+        $file = CRM_Utils_File::relativize($file, CRM_Utils_File::addTrailingSlash(dirname($this->getBuildPath())));
         $buf .= sprintf("@import \"%s\";\n", $file);
       }
       file_put_contents($allFile, $buf);
@@ -92,7 +92,7 @@ class BuildScss {
   }
 
   protected function debug($message) {
-     // echo "[$message]\n";
+    // echo "[$message]\n";
   }
 
 }
