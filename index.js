@@ -3,13 +3,13 @@ module.exports = function(options) {
   var cvPromise = require('civicrm-cv')({mode: 'promise'});
   var updateScript = __dirname + "/bin/civicrm-scssroot-update.php";
   var cleanScript = __dirname + "/bin/civicrm-scssroot-clean.php";
-  var buildPath = null;
+  var basePath = null;
 
   /**
    * Assimilate any interesting metadata returned by external script.
    */
   function assimilate(result) {
-    if (result.buildPath) buildPath = result.buildPath;
+    if (result.basePath) basePath = result.basePath;
   }
 
   return {
@@ -18,12 +18,15 @@ module.exports = function(options) {
     update: function() { return cvPromise('scr ' + updateScript).then(assimilate); },
     updateSync: function() { assimilate(cvSync('scr ' + updateScript)); },
 
+    /**
+     * @return String
+     */
     getPath: function() {
-      if (buildPath === null) {
+      if (basePath === null) {
         // Note: Keep in sync with BuildScss::__construct().
-        buildPath = cvSync("ev 'return CRM_Core_Config::singleton()->templateCompileDir;'");
+        basePath = cvSync("ev 'return CRM_Core_Config::singleton()->templateCompileDir;'");
       }
-      return buildPath;
+      return basePath;
     },
 
     /**
@@ -33,10 +36,11 @@ module.exports = function(options) {
      * @param filter
      *   Null, or an array of extension keys, or a function
      *   Ex: ['org.civicrm.bootstrap', 'org.civicrm.bootstrapcivicrm']
-     * @return array
+     *   Ex: function(ext) { console.log(ext.key); return true; }
+     * @return Array
      *   List of file globs.
      *   Ex: ['/var/www/vendor/civicrm/bootstrap/**' + '/*.scss']
-     *   (Note: example split slightly to fit in JS comments)
+     *   (Note: The example is split slightly to fit in JS comments.)
      */
     getWatchList: function(filter) {
       var extDirs = cvSync('ext:list -L --columns=key,path');
